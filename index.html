@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Theory Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            text-align: center;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        select, input, button {
+            margin: 10px;
+            padding: 8px 15px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #setup {
+            background-color: #34495e;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        #quiz {
+            display: none;
+            background-color: #34495e;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 20px;
+            padding: 15px;
+            background-color: #34495e;
+            border-radius: 10px;
+            display: none;
+        }
+        .option {
+            margin: 8px;
+            padding: 12px;
+            background-color: #2980b9;
+            border: none;
+            color: #ecf0f1;
+            cursor: pointer;
+            border-radius: 5px;
+            min-width: 200px;
+            display: block;
+            width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .option:hover {
+            background-color: #1abc9c;
+        }
+        .option.selected {
+            background-color: #9b59b6;
+        }
+        .correct {
+            background-color: #2ecc71;
+        }
+        .wrong {
+            background-color: #e74c3c;
+        }
+        .progress {
+            margin: 20px 0;
+            font-size: 16px;
+        }
+        #finishButton {
+            margin-top: 20px;
+            background-color: #e74c3c;
+        }
+        #finishButton:hover {
+            background-color: #c0392b;
+        }
+        .welcome {
+            font-size: 18px;
+            margin: 20px 0;
+            line-height: 1.5;
+        }
+        .results-table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        .results-table th, .results-table td {
+            padding: 8px;
+            border: 1px solid #7f8c8d;
+        }
+        .results-table th {
+            background-color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <h1>LATIHAN FAMILY CHOOOORD ANJENG</h1>
+    
+    <div id="setup">
+        <p class="welcome">pilih scale ama root note nya cuki</p>
+        
+        <div>
+            <label for="scaleType">SCALE:</label>
+            <select id="scaleType">
+                <option value="major">Major</option>
+                <option value="minor">Minor</option>
+            </select>
+        </div>
+        
+        <div>
+            <label for="rootNote">Root Note:</label>
+            <select id="rootNote">
+                <option value="C">C</option>
+                <option value="C#">C#</option>
+                <option value="D">D</option>
+                <option value="D#">D#</option>
+                <option value="E">E</option>
+                <option value="F">F</option>
+                <option value="F#">F#</option>
+                <option value="G">G</option>
+                <option value="G#">G#</option>
+                <option value="A">A</option>
+                <option value="A#">A#</option>
+                <option value="B">B</option>
+            </select>
+        </div>
+        
+        <div>
+            <label for="questionCount">BANYAK SOAL (10-50):</label>
+            <input type="number" id="questionCount" min="10" max="50" value="10">
+        </div>
+        
+        <button onclick="startQuiz()">Start Quiz</button>
+    </div>
+    
+    <div id="quiz">
+        <h2 id="question"></h2>
+        <div class="progress">
+            Question <span id="currentQuestionNum">1</span> of <span id="totalQuestions">10</span>
+        </div>
+        <div id="options"></div>
+        <button id="nextButton" onclick="nextQuestion()">Next Question</button>
+        <button id="finishButton" onclick="finishQuiz()">Finish Quiz</button>
+    </div>
+    
+    <div id="result" class="result"></div>
+    
+    <script>
+        let currentQuestion = 0;
+        let score = 0;
+        let questions = [];
+        let userAnswers = [];
+        let lastDegree = -1; // Track the last degree used to prevent repetition
+        let lastQuestionType = ''; // Track the last question type used
+
+        const majorChords = [
+            ["C", "D minor", "E minor", "F", "G", "A minor", "B diminished"],
+            ["C#", "D# minor", "F minor", "F#", "G#", "A# minor", "C diminished"],
+            ["D", "E minor", "F# minor", "G", "A", "B minor", "C# diminished"],
+            ["D#", "F minor", "G minor", "G#", "A#", "C minor", "D diminished"],
+            ["E", "F# minor", "G# minor", "A", "B", "C# minor", "D# diminished"],
+            ["F", "G minor", "A minor", "Bb", "C", "D minor", "E diminished"],
+            ["F#", "G# minor", "A# minor", "B", "C#", "D# minor", "F diminished"],
+            ["G", "A minor", "B minor", "C", "D", "E minor", "F# diminished"],
+            ["G#", "A# minor", "C minor", "C#", "D#", "F minor", "G diminished"],
+            ["A", "B minor", "C# minor", "D", "E", "F# minor", "G# diminished"],
+            ["Bb", "C minor", "D minor", "Eb", "F", "G minor", "A diminished"],
+            ["B", "C# minor", "D# minor", "E", "F#", "G# minor", "A# diminished"]
+        ];
+
+        const minorChords = [
+            ["C minor", "D diminished", "Eb", "F minor", "G minor", "Ab", "Bb"],
+            ["C# minor", "D# diminished", "E", "F# minor", "G# minor", "A", "B"],
+            ["D minor", "E diminished", "F", "G minor", "A minor", "Bb", "C"],
+            ["D# minor", "F diminished", "F#", "G# minor", "A# minor", "B", "C#"],
+            ["E minor", "F# diminished", "G", "A minor", "B minor", "C", "D"],
+            ["F minor", "G diminished", "Ab", "Bb minor", "C minor", "Db", "Eb"],
+            ["F# minor", "G# diminished", "A", "B minor", "C# minor", "D", "E"],
+            ["G minor", "A diminished", "Bb", "C minor", "D minor", "Eb", "F"],
+            ["G# minor", "A# diminished", "B", "C# minor", "D# minor", "E", "F#"],
+            ["A minor", "B diminished", "C", "D minor", "E minor", "F", "G"],
+            ["Bb minor", "C diminished", "Db", "Eb minor", "F minor", "Gb", "Ab"],
+            ["B minor", "C# diminished", "D", "E minor", "F# minor", "G", "A"]
+        ];
+
+        const romanNumerals = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'];
+        const flatRomanNumerals = ['♭I', '♭ii', '♭iii', '♭IV', '♭V', '♭vi', '♭vii'];
+        const minorRomanNumerals = ['i', 'ii°', 'III', 'iv', 'v', 'VI', 'VII'];
+        
+        const scaleDegrees = ['1', '2', '3', '4', '5', '6', '7'];
+        const flatScaleDegrees = ['♭1', '♭2', '♭3', '♭4', '♭5', '♭6', '♭7'];
+
+        function startQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            questions = [];
+            userAnswers = [];
+            lastDegree = -1;
+            lastQuestionType = '';
+            
+            const scaleType = document.getElementById("scaleType").value;
+            const rootNote = document.getElementById("rootNote").selectedIndex;
+            const rootNoteName = document.getElementById("rootNote").value;
+            const numQuestions = parseInt(document.getElementById("questionCount").value);
+            
+            if (numQuestions < 10 || numQuestions > 50) {
+                alert("Please choose between 10 and 50 questions.");
+                return;
+            }
+
+            const chords = scaleType === "major" ? majorChords[rootNote] : minorChords[rootNote];
+            
+            // Generate a pool of question types
+            const questionTypes = [
+                'chord-roman', // Ask for chord given Roman numeral
+                'roman-chord', // Ask for Roman numeral given chord
+                'chord-number', // Ask for chord given number
+                'number-chord', // Ask for number given chord
+                'flat-chord', // Ask for chord given flat notation
+                'chord-flat'  // Ask for flat notation given chord
+            ];
+
+            // Keep track of used questions to avoid exact repetition
+            const usedQuestions = new Set();
+            
+            // Generate questions
+            for (let i = 0; i < numQuestions; i++) {
+                let degree, questionType, question, answer;
+                let questionKey;
+                
+                // Try to find a non-repeating question
+                let attempts = 0;
+                do {
+                    // Avoid using the same degree consecutively
+                    do {
+                        degree = Math.floor(Math.random() * 7);
+                    } while (degree === lastDegree && attempts < 5);
+                    
+                    // Avoid using the same question type consecutively
+                    do {
+                        questionType = questionTypes[Math.floor(Math.random() * questionTypes.length)];
+                    } while (questionType === lastQuestionType && attempts < 5);
+                    
+                    // Formulate question based on type
+                    if (questionType === 'chord-roman') {
+                        const numerals = scaleType === "major" ? romanNumerals : minorRomanNumerals;
+                        question = `What is the ${numerals[degree]} chord in ${rootNoteName} ${scaleType}?`;
+                        answer = chords[degree];
+                    } else if (questionType === 'roman-chord') {
+                        const numerals = scaleType === "major" ? romanNumerals : minorRomanNumerals;
+                        question = `Which degree is ${chords[degree]} in ${rootNoteName} ${scaleType}?`;
+                        answer = numerals[degree];
+                    } else if (questionType === 'chord-number') {
+                        question = `What is the ${degree + 1} chord in ${rootNoteName} ${scaleType}?`;
+                        answer = chords[degree];
+                    } else if (questionType === 'number-chord') {
+                        question = `Which number is ${chords[degree]} in ${rootNoteName} ${scaleType}?`;
+                        answer = (degree + 1).toString();
+                    } else if (questionType === 'flat-chord') {
+                        // Only use flat notation questions occasionally
+                        if (Math.random() > 0.7) {
+                            // Get a flat scale degree (usually from outside the scale)
+                            const flatDegree = Math.floor(Math.random() * 7);
+                            question = `What is the ${flatScaleDegrees[flatDegree]} chord in ${rootNoteName} ${scaleType}?`;
+                            
+                            // For simplicity, let's treat flat degrees as referring to one note below normal scale degrees
+                            const adjustedDegree = (flatDegree - 1 + 7) % 7; // Wrap around to handle ♭1
+                            answer = chords[adjustedDegree];
+                        } else {
+                            question = `What is the ${scaleDegrees[degree]} chord in ${rootNoteName} ${scaleType}?`;
+                            answer = chords[degree];
+                        }
+                    } else if (questionType === 'chord-flat') {
+                        // Only occasionally ask for flat notation
+                        if (Math.random() > 0.7) {
+                            question = `${chords[degree]} is which flat scale degree in ${rootNoteName} ${scaleType}?`;
+                            // For simplicity, treat it as one note above
+                            const flatDegree = (degree + 1) % 7;
+                            answer = flatScaleDegrees[flatDegree];
+                        } else {
+                            question = `${chords[degree]} is which scale degree in ${rootNoteName} ${scaleType}?`;
+                            answer = scaleDegrees[degree];
+                        }
+                    }
+                    
+                    questionKey = question + "|" + answer;
+                    attempts++;
+                    
+                } while (usedQuestions.has(questionKey) && attempts < 10 && usedQuestions.size < questionTypes.length * 7);
+                
+                usedQuestions.add(questionKey);
+                lastDegree = degree;
+                lastQuestionType = questionType;
+                
+                // Generate options based on question type
+                let options = [answer];
+                let potentialOptions = [];
+                
+                if (questionType === 'chord-roman' || questionType === 'chord-number' || questionType === 'flat-chord') {
+                    // Options are chords
+                    potentialOptions = [...chords];
+                } else if (questionType === 'roman-chord') {
+                    // Options are Roman numerals
+                    potentialOptions = scaleType === "major" ? [...romanNumerals] : [...minorRomanNumerals];
+                } else if (questionType === 'number-chord') {
+                    // Options are numbers 1-7
+                    potentialOptions = ['1', '2', '3', '4', '5', '6', '7'];
+                } else if (questionType === 'chord-flat') {
+                    // Options are flat scale degrees
+                    potentialOptions = [...flatScaleDegrees, ...scaleDegrees];
+                }
+                
+                // Remove correct answer from potential options to avoid duplicates
+                potentialOptions = potentialOptions.filter(opt => opt !== answer);
+                
+                // Shuffle and take 2 random incorrect options
+                potentialOptions.sort(() => Math.random() - 0.5);
+                options = options.concat(potentialOptions.slice(0, 2));
+                
+                // Shuffle final options
+                options.sort(() => Math.random() - 0.5);
+                
+                questions.push({ question, options, answer });
+                userAnswers.push(null);
+            }
+
+            // Hide setup, show quiz
+            document.getElementById("setup").style.display = "none";
+            document.getElementById("quiz").style.display = "block";
+            document.getElementById("result").style.display = "none";
+            
+            // Update question count display
+            document.getElementById("totalQuestions").textContent = numQuestions;
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById("question").textContent = q.question;
+            document.getElementById("currentQuestionNum").textContent = currentQuestion + 1;
+            
+            const optionsDiv = document.getElementById("options");
+            optionsDiv.innerHTML = "";
+            
+            q.options.forEach(option => {
+                const btn = document.createElement("button");
+                btn.textContent = option;
+                btn.className = "option";
+                // If this question has a saved answer, mark it as selected
+                if (userAnswers[currentQuestion] === option) {
+                    btn.classList.add("selected");
+                }
+                btn.onclick = () => selectAnswer(option);
+                optionsDiv.appendChild(btn);
+            });
+            
+            // Show next button if not the last question, otherwise show finish button
+            if (currentQuestion === questions.length - 1) {
+                document.getElementById("nextButton").style.display = "none";
+                document.getElementById("finishButton").style.display = "block";
+            } else {
+                document.getElementById("nextButton").style.display = "block";
+                document.getElementById("finishButton").style.display = "none";
+            }
+        }
+        
+        function selectAnswer(selectedOption) {
+            // Clear all selections
+            const options = document.querySelectorAll(".option");
+            options.forEach(option => {
+                option.classList.remove("selected");
+            });
+            
+            // Mark selected option
+            options.forEach(option => {
+                if (option.textContent === selectedOption) {
+                    option.classList.add("selected");
+                }
+            });
+            
+            // Save the answer
+            userAnswers[currentQuestion] = selectedOption;
+        }
+        
+        function nextQuestion() {
+            // Only proceed if an answer has been selected
+            if (!userAnswers[currentQuestion]) {
+                alert("Please select an answer before proceeding.");
+                return;
+            }
+            
+            currentQuestion++;
+            showQuestion();
+        }
+        
+        function finishQuiz() {
+            // Make sure the current question has an answer
+            if (!userAnswers[currentQuestion]) {
+                alert("Please select an answer for the current question.");
+                return;
+            }
+            
+            // Check for any unanswered questions
+            if (userAnswers.includes(null)) {
+                if (!confirm("Some questions haven't been answered. Are you sure you want to finish?")) {
+                    return;
+                }
+            }
+            
+            // Calculate score
+            score = 0;
+            for (let i = 0; i < questions.length; i++) {
+                if (userAnswers[i] === questions[i].answer) {
+                    score++;
+                }
+            }
+            
+            // Hide quiz, show result
+            document.getElementById("quiz").style.display = "none";
+            const resultDiv = document.getElementById("result");
+            resultDiv.style.display = "block";
+            
+            // Calculate percentage
+            const percentage = Math.round((score / questions.length) * 100);
+            
+            // Build results table
+            let resultsTableHTML = `
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Question</th>
+                            <th>Your Answer</th>
+                            <th>Correct Answer</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            for (let i = 0; i < questions.length; i++) {
+                const isCorrect = userAnswers[i] === questions[i].answer;
+                resultsTableHTML += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${questions[i].question}</td>
+                        <td>${userAnswers[i] || "Not answered"}</td>
+                        <td>${questions[i].answer}</td>
+                        <td style="color: ${isCorrect ? '#2ecc71' : '#e74c3c'}">${isCorrect ? "Correct" : "Incorrect"}</td>
+                    </tr>
+                `;
+            }
+            
+            resultsTableHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            // Display result
+            resultDiv.innerHTML = `
+                <h2>Quiz Results</h2>
+                <p>You scored <strong>${score}</strong> out of <strong>${questions.length}</strong> questions.</p>
+                <p>Your grade: <strong>${percentage}%</strong></p>
+                ${resultsTableHTML}
+                <button onclick="location.reload()" style="margin-top: 20px;">Try Again</button>
+            `;
+        }
+    </script>
+</body>
+</html>
