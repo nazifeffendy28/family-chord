@@ -1,0 +1,39 @@
+{
+  "rootOrder": ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"],
+  "numerals": {
+    "major": ["I", "ii", "iii", "IV", "V", "vi", "vii°"],
+    "minor": ["i", "ii°", "III", "iv", "v", "VI", "VII"]
+  },
+  "flatNumerals": ["♭II", "♭III", "♭V", "♭VI", "♭VII"],
+  "scaleDegrees": ["1", "2", "3", "4", "5", "6", "7"],
+  "scales": {
+    "major": {
+      "C":  ["C", "D minor", "E minor", "F", "G", "A minor", "B diminished", "Db", "Eb", "Gb", "Ab", "Bb"],
+      "C#": ["C#", "D# minor", "E# minor", "F#", "G#", "A# minor", "B# diminished", "D", "E", "G", "A", "B"],
+      "D":  ["D", "E minor", "F# minor", "G", "A", "B minor", "C# diminished", "Eb", "F", "Ab", "Bb", "C"],
+      "D#": ["Eb", "F minor", "G minor", "Ab", "Bb", "C minor", "D diminished", "E", "Gb", "A", "B", "Db"],
+      "E":  ["E", "F# minor", "G# minor", "A", "B", "C# minor", "D# diminished", "F", "G", "A#", "C", "D"],
+      "F":  ["F", "G minor", "A minor", "Bb", "C", "D minor", "E diminished", "Gb", "Ab", "B", "Db", "Eb"],
+      "F#": ["F#", "G# minor", "A# minor", "B", "C#", "D# minor", "E# diminished", "G", "A", "C", "D", "E"],
+      "G":  ["G", "A minor", "B minor", "C", "D", "E minor", "F# diminished", "Ab", "Bb", "Db", "Eb", "F"],
+      "G#": ["Ab", "Bb minor", "C minor", "Db", "Eb", "F minor", "G diminished", "A", "B", "D", "E", "Gb"],
+      "A":  ["A", "B minor", "C# minor", "D", "E", "F# minor", "G# diminished", "Bb", "C", "Eb", "F", "G"],
+      "A#": ["Bb", "C minor", "D minor", "Eb", "F", "G minor", "A diminished", "B", "Db", "E", "Gb", "Ab"],
+      "B":  ["B", "C# minor", "D# minor", "E", "F#", "G# minor", "A# diminished", "C", "D", "F", "G", "A"]
+    },
+    "minor": {
+      "C":  ["C minor", "D diminished", "Eb", "F minor", "G minor", "Ab", "Bb", "Db", "E", "Gb", "A", "B"],
+      "C#": ["C# minor", "D# diminished", "E", "F# minor", "G# minor", "A", "B", "D", "F", "G", "A#", "C"],
+      "D":  ["D minor", "E diminished", "F", "G minor", "A minor", "Bb", "C", "Eb", "F#", "Ab", "B", "Db"],
+      "D#": ["Eb minor", "F diminished", "Gb", "Ab minor", "Bb minor", "B", "Db", "E", "G", "A", "C", "D"],
+      "E":  ["E minor", "F# diminished", "G", "A minor", "B minor", "C", "D", "F", "G#", "Bb", "Db", "Eb"],
+      "F":  ["F minor", "G diminished", "Ab", "Bb minor", "C minor", "Db", "Eb", "Gb", "A", "B", "D", "E"],
+      "F#": ["F# minor", "G# diminished", "A", "B minor", "C# minor", "D", "E", "G", "A#", "C", "Eb", "F"],
+      "G":  ["G minor", "A diminished", "Bb", "C minor", "D minor", "Eb", "F", "Ab", "B", "Db", "E", "Gb"],
+      "G#": ["Ab minor", "A# diminished", "B", "C# minor", "D# minor", "E", "F#", "A", "C", "D", "F", "G"],
+      "A":  ["A minor", "B diminished", "C", "D minor", "E minor", "F", "G", "Bb", "Db", "Eb", "Gb", "Ab"],
+      "A#": ["Bb minor", "C diminished", "Db", "Eb minor", "F minor", "Gb", "Ab", "B", "D", "E", "G", "A"],
+      "B":  ["B minor", "C# diminished", "D", "E minor", "F# minor", "G", "A", "C", "Eb", "F", "Ab", "Bb"]
+    }
+  }
+}

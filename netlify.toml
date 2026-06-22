@@ -1,0 +1,14 @@
+# Konfigurasi Netlify — siap deploy tanpa pengaturan tambahan.
+
+[build]
+  # Seluruh file statis (index.html, styles.css, program.js, data/) ada di root.
+  publish = "."
+  # Lokasi serverless functions.
+  functions = "netlify/functions"
+
+[functions]
+  # esbuild mem-bundle require('../../data/*.json') ke dalam tiap function.
+  node_bundler = "esbuild"
+
+# package.json sudah berisi dependency @netlify/blobs; Netlify menjalankan
+# `npm install` otomatis saat deploy. Tidak ada konfigurasi tambahan.

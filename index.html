@@ -1,63 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music Theory Quiz</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Family Chord · Music Theory Quiz</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
 </head>
 <body>
-    <h1>LATIHAN FAMILY CHOOOORD HALALAN THOYIBAN</h1>
-    
-    <div id="setup">
-        <p class="welcome">pilih scale ama root note nya</p>
-        
-        <div>
-            <label for="scaleType">SCALE:</label>
-            <select id="scaleType">
-                <option value="major">Major</option>
-                <option value="minor">Minor</option>
-            </select>
-        </div>
-        
-        <div>
-            <label for="rootNote">Root Note:</label>
-            <select id="rootNote">
-                <option value="C">C</option>
-                <option value="C#">C#</option>
-                <option value="D">D</option>
-                <option value="D#">D#</option>
-                <option value="E">E</option>
-                <option value="F">F</option>
-                <option value="F#">F#</option>
-                <option value="G">G</option>
-                <option value="G#">G#</option>
-                <option value="A">A</option>
-                <option value="A#">A#</option>
-                <option value="B">B</option>
-            </select>
-        </div>
-        
-        <div>
-            <label for="questionCount">BANYAK SOAL (10-50):</label>
-            <input type="number" id="questionCount" min="10" max="50" value="10">
-        </div>
-        
-        <button onclick="startQuiz()">Start Quiz</button>
-    </div>
-    
-    <div id="quiz">
-        <h2 id="question"></h2>
-        <div class="progress">
-            Question <span id="currentQuestionNum">1</span> of <span id="totalQuestions">10</span>
-        </div>
-        <div id="options"></div>
-        <button id="nextButton" onclick="nextQuestion()">Next Question</button>
-        <button id="finishButton" onclick="finishQuiz()">Finish Quiz</button>
-    </div>
-    
-    <div id="result" class="result"></div>
-    <script src="program.js"></script>
-</body>
+  <div class="app">
+    <header class="app-header">
+      <h1>🎵 Family Chord</h1>
+      <p class="subtitle">Latihan teori musik — chord family &amp; scale degree</p>
+    </header>
 
+    <!-- ============ SETUP ============ -->
+    <section id="setup" class="card">
+      <h2>Pengaturan Quiz</h2>
+
+      <div class="field">
+        <label for="playerName">Nama Pemain</label>
+        <input type="text" id="playerName" placeholder="Masukkan nama kamu" maxlength="30" />
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="scaleType">Scale</label>
+          <select id="scaleType">
+            <option value="major">Major</option>
+            <option value="minor">Minor</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rootNote">Root Note</label>
+          <select id="rootNote">
+            <option value="C">C</option>
+            <option value="C#">C#</option>
+            <option value="D">D</option>
+            <option value="D#">D#</option>
+            <option value="E">E</option>
+            <option value="F">F</option>
+            <option value="F#">F#</option>
+            <option value="G">G</option>
+            <option value="G#">G#</option>
+            <option value="A">A</option>
+            <option value="A#">A#</option>
+            <option value="B">B</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="questionCount">Jumlah Soal (10–50)</label>
+        <input type="number" id="questionCount" min="10" max="50" value="10" />
+      </div>
+
+      <p class="highscore-banner">🏆 High Score kamu: <span id="setupHighScore">0%</span></p>
+
+      <button id="startBtn" class="btn btn-primary">Mulai Quiz</button>
+    </section>
+
+    <!-- ============ QUIZ ============ -->
+    <section id="quiz" class="card hidden">
+      <!-- Progress bar -->
+      <div class="progress-wrap">
+        <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+        <div class="progress-text">
+          Soal <span id="currentQuestionNum">1</span> / <span id="totalQuestions">10</span>
+        </div>
+      </div>
+
+      <!-- Statistik langsung -->
+      <div class="stats-row">
+        <div class="stat">🔥 Streak <strong id="streakValue">0</strong></div>
+        <div class="stat">🎯 Akurasi <strong id="accuracyValue">0%</strong></div>
+        <div class="stat">⭐ Best <strong id="bestStreakValue">0</strong></div>
+      </div>
+
+      <h2 id="question" class="question-text"></h2>
+      <div id="options" class="options"></div>
+
+      <div class="quiz-actions">
+        <button id="nextButton" class="btn btn-primary">Soal Berikutnya</button>
+        <button id="finishButton" class="btn btn-danger hidden">Selesai</button>
+      </div>
+    </section>
+
+    <!-- ============ RESULT ============ -->
+    <section id="result" class="card hidden"></section>
+
+    <!-- ============ LEADERBOARD ============ -->
+    <section id="leaderboard" class="card">
+      <div class="leaderboard-head">
+        <h2>🏆 Leaderboard</h2>
+        <button id="refreshLeaderboard" class="btn btn-ghost" title="Muat ulang">↻</button>
+      </div>
+      <div id="leaderboardBody">
+        <p class="muted">Memuat leaderboard…</p>
+      </div>
+    </section>
+
+    <footer class="app-footer">
+      <p class="muted">Dibuat dengan ❤️ · Netlify Functions + Vanilla JS</p>
+    </footer>
+  </div>
+
+  <script src="program.js"></script>
+</body>
 </html>
