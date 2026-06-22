@@ -29,6 +29,26 @@
 
       <div class="field-row">
         <div class="field">
+          <label for="difficulty">Level</label>
+          <select id="difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+            <option value="restu-wilayatul-faqih">Restu Wilayatul Faqih 🔥</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="notation">Notasi</label>
+          <select id="notation">
+            <option value="sharp">Sharp (♯)</option>
+            <option value="flat">Flat (♭)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
           <label for="scaleType">Scale</label>
           <select id="scaleType">
             <option value="major">Major</option>
@@ -38,20 +58,8 @@
 
         <div class="field">
           <label for="rootNote">Root Note</label>
-          <select id="rootNote">
-            <option value="C">C</option>
-            <option value="C#">C#</option>
-            <option value="D">D</option>
-            <option value="D#">D#</option>
-            <option value="E">E</option>
-            <option value="F">F</option>
-            <option value="F#">F#</option>
-            <option value="G">G</option>
-            <option value="G#">G#</option>
-            <option value="A">A</option>
-            <option value="A#">A#</option>
-            <option value="B">B</option>
-          </select>
+          <!-- Opsi diisi oleh program.js sesuai pilihan notasi (♯/♭). -->
+          <select id="rootNote"></select>
         </div>
       </div>
 
@@ -59,6 +67,8 @@
         <label for="questionCount">Jumlah Soal (10–50)</label>
         <input type="number" id="questionCount" min="10" max="50" value="10" />
       </div>
+
+      <p class="level-hint" id="levelHint"></p>
 
       <p class="highscore-banner">🏆 High Score kamu: <span id="setupHighScore">0%</span></p>
 
@@ -77,16 +87,21 @@
 
       <!-- Statistik langsung -->
       <div class="stats-row">
-        <div class="stat">🔥 Streak <strong id="streakValue">0</strong></div>
+        <div class="stat" id="streakStat">🔥 Streak <strong id="streakValue">0</strong></div>
         <div class="stat">🎯 Akurasi <strong id="accuracyValue">0%</strong></div>
         <div class="stat">⭐ Best <strong id="bestStreakValue">0</strong></div>
+        <div class="stat">💎 Poin <strong id="pointsValue">0</strong></div>
       </div>
+
+      <!-- Timer (hanya level Faqih) -->
+      <div id="timer" class="timer hidden">⏱️ <span id="timerValue">5</span>s</div>
 
       <h2 id="question" class="question-text"></h2>
       <div id="options" class="options"></div>
 
       <div class="quiz-actions">
-        <button id="nextButton" class="btn btn-primary">Soal Berikutnya</button>
+        <button id="submitButton" class="btn btn-primary" disabled>Submit</button>
+        <button id="nextButton" class="btn btn-primary hidden">Soal Berikutnya</button>
         <button id="finishButton" class="btn btn-danger hidden">Selesai</button>
       </div>
     </section>

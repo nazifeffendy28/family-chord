@@ -1,5 +1,29 @@
 [
-  { "name": "Andi",  "score": 19, "totalQuestions": 20, "percentage": 95, "date": "2026-01-10T08:00:00.000Z" },
-  { "name": "Budi",  "score": 17, "totalQuestions": 20, "percentage": 85, "date": "2026-01-11T09:30:00.000Z" },
-  { "name": "Citra", "score": 14, "totalQuestions": 20, "percentage": 70, "date": "2026-01-12T14:15:00.000Z" }
+  {
+    "name": "Andi",
+    "score": 19,
+    "totalQuestions": 20,
+    "percentage": 95,
+    "difficulty": "hard",
+    "points": 57,
+    "date": "2026-01-10T08:00:00.000Z"
+  },
+  {
+    "name": "Budi",
+    "score": 17,
+    "totalQuestions": 20,
+    "percentage": 85,
+    "difficulty": "medium",
+    "points": 34,
+    "date": "2026-01-11T09:30:00.000Z"
+  },
+  {
+    "name": "Citra",
+    "score": 14,
+    "totalQuestions": 20,
+    "percentage": 70,
+    "difficulty": "easy",
+    "points": 14,
+    "date": "2026-01-12T14:15:00.000Z"
+  }
 ]

@@ -1,5 +1,5 @@
 /**
- * GET /.netlify/functions/getChords?root=C&scale=major
+ * GET /.netlify/functions/getChords?root=C&scale=major[&notation=sharp]
  *
  * Mengembalikan "chord family" sebagai map roman numeral -> chord:
  *   { "I":"C", "ii":"D minor", ..., "vii°":"B diminished" }
@@ -11,8 +11,9 @@ exports.handler = async (event) => {
     const params = event.queryStringParameters || {};
     const root = params.root || "C";
     const scale = params.scale || "major";
+    const notation = params.notation || "sharp";
 
-    const family = getChordFamily(root, scale);
+    const family = getChordFamily(root, scale, notation);
     return json(200, family);
   } catch (err) {
     return json(400, { error: err.message });

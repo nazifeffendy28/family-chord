@@ -4,12 +4,69 @@
  *
  * File diawali underscore ("_") sehingga Netlify TIDAK memperlakukannya
  * sebagai sebuah function/endpoint, tetapi tetap bisa di-require oleh
- * function lain. Semua data chord dibaca dari data/chords.json (tidak lagi
- * hardcoded di frontend).
+ * function lain. Semua data chord dibaca dari data/chords.json (di-generate
+ * oleh scripts/generate-chords.js — tidak lagi hardcoded di frontend).
  */
 
 // Data chord di-bundle dari file JSON (sumber kebenaran tunggal).
 const chordData = require("../../data/chords.json");
+
+const VALID_NOTATIONS = ["sharp", "flat"];
+const VALID_SCALES = ["major", "minor"];
+
+// Definisi level kesulitan. Tiap level mengatur:
+//   types           : kumpulan tipe soal (boleh ada duplikat = bobot lebih sering)
+//   degrees         : derajat skala yang boleh dipakai (0=I ... 6=vii°)
+//   options         : jumlah pilihan jawaban
+//   hardDistractors : pengecoh diambil dari seluruh 12 chord (lebih menjebak)
+//   points          : poin per jawaban benar (bobot level)
+//   timer           : batas waktu per soal dalam detik (0 = tanpa batas)
+const ALL_DEGREES = [0, 1, 2, 3, 4, 5, 6];
+
+// Bonus streak: bila streak benar beruntun MELEBIHI angka ini, tiap jawaban
+// benar berikutnya mendapat poin dobel (bonus = poin dasar level).
+const STREAK_BONUS_THRESHOLD = 5;
+
+const DIFFICULTIES = {
+  easy: {
+    // Chord pokok I, IV, V saja; hanya "simbol -> chord" (recognition).
+    types: ["chord-roman", "chord-number"],
+    degrees: [0, 3, 4], // I, IV, V
+    options: 3,
+    hardDistractors: false,
+    points: 1,
+    timer: 0,
+  },
+  medium: {
+    // Seluruh chord diatonik, dua arah (chord <-> simbol).
+    types: ["chord-roman", "roman-chord", "chord-number", "number-chord"],
+    degrees: ALL_DEGREES,
+    options: 4,
+    hardDistractors: false,
+    points: 2,
+    timer: 0,
+  },
+  hard: {
+    // Semua tipe, termasuk chord & derajat flat.
+    types: ["chord-roman", "roman-chord", "chord-number", "number-chord", "flat-chord", "chord-flat"],
+    degrees: ALL_DEGREES,
+    options: 4,
+    hardDistractors: false,
+    points: 3,
+    timer: 0,
+  },
+  "restu-wilayatul-faqih": {
+    // Level terberat: fokus soal flat (♭II–♭VII) — dibobot 2x lebih sering —
+    // plus derajat "warna" yang susah (ii, iii, vi, vii°). 5 opsi, pengecoh
+    // dari seluruh chromatic pool, timer 5 detik, poin terbesar.
+    types: ["flat-chord", "chord-flat", "flat-chord", "chord-flat", "roman-chord", "chord-roman"],
+    degrees: [1, 2, 5, 6], // ii, iii, vi, vii° (bukan chord pokok)
+    options: 5,
+    hardDistractors: true,
+    points: 5,
+    timer: 5,
+  },
+};
 
 /**
  * Helper standar untuk membentuk response JSON Netlify Function.
@@ -30,40 +87,51 @@ function json(statusCode, body) {
   };
 }
 
-/**
- * Ambil array 12 chord (7 diatonik + 5 chord flat) untuk root + scale tertentu.
- * Melempar error bila root/scale tidak dikenal.
- */
-function getChordArray(root, scale) {
-  const scaleObj = chordData.scales[scale];
-  if (!scaleObj) {
+/** Normalisasi & validasi notasi (sharp/flat). Default: sharp. */
+function normalizeNotation(notation) {
+  return VALID_NOTATIONS.includes(notation) ? notation : "sharp";
+}
+
+/** Normalisasi & validasi scale. Default: major. */
+function normalizeScale(scale) {
+  if (!VALID_SCALES.includes(scale)) {
     throw new Error(`Scale tidak dikenal: "${scale}" (gunakan major / minor)`);
   }
-  const chords = scaleObj[root];
+  return scale;
+}
+
+/** Normalisasi level kesulitan. Default: medium. */
+function normalizeDifficulty(difficulty) {
+  return DIFFICULTIES[difficulty] ? difficulty : "medium";
+}
+
+/**
+ * Ambil array 12 chord (7 diatonik + 5 chord flat) untuk root + scale + notasi.
+ * Melempar error bila root tidak dikenal pada notasi tersebut.
+ */
+function getChordArray(root, scale, notation) {
+  const chords = chordData.data[notation][scale][root];
   if (!chords) {
-    throw new Error(`Root note tidak dikenal: "${root}"`);
+    throw new Error(`Root note tidak dikenal untuk notasi ${notation}: "${root}"`);
   }
   return chords;
 }
 
 /** Angka roman numeral sesuai scale (major / minor). */
 function getNumerals(scale) {
-  const numerals = chordData.numerals[scale];
-  if (!numerals) {
-    throw new Error(`Scale tidak dikenal: "${scale}"`);
-  }
-  return numerals;
+  return chordData.numerals[scale];
 }
 
 /**
  * Bentuk "chord family": map roman numeral -> nama chord (7 chord diatonik).
  * Dipakai oleh endpoint getChords.
  *
- * Contoh hasil (C major):
- *   { "I": "C", "ii": "D minor", ..., "vii°": "B diminished" }
+ * Contoh hasil (C major): { "I": "C", "ii": "D minor", ..., "vii°": "B diminished" }
  */
-function getChordFamily(root, scale) {
-  const chords = getChordArray(root, scale);
+function getChordFamily(root, scale, notation) {
+  scale = normalizeScale(scale);
+  notation = normalizeNotation(notation);
+  const chords = getChordArray(root, scale, notation);
   const numerals = getNumerals(scale);
   const family = {};
   for (let i = 0; i < numerals.length; i++) {
@@ -78,39 +146,33 @@ function shuffle(arr) {
 }
 
 /**
- * Hasilkan SATU soal acak. Mengembalikan objek:
+ * Hasilkan SATU soal acak sesuai level kesulitan. Mengembalikan objek:
  *   { question, options, answer }
  *
  * `state` menyimpan degree & tipe soal terakhir agar tidak berulang
- * berturut-turut (logika ini dipertahankan persis dari program.js asli).
+ * berturut-turut (logika dipertahankan dari versi asli).
+ * `diff` adalah salah satu entri DIFFICULTIES.
  */
-function buildSingleQuestion(root, scale, chords, numerals, state) {
+function buildSingleQuestion(root, scale, chords, numerals, state, diff) {
   const flatRomanNumerals = chordData.flatNumerals;
+  const questionTypes = diff.types;
+  const numDistractors = diff.options - 1; // jumlah pengecoh = total opsi - 1
 
-  // Daftar tipe soal yang tersedia (sama dengan versi asli).
-  const questionTypes = [
-    "chord-roman", // Tanya chord diberikan roman numeral
-    "roman-chord", // Tanya roman numeral diberikan chord
-    "chord-number", // Tanya chord diberikan angka
-    "number-chord", // Tanya angka diberikan chord
-    "flat-chord", // Tanya chord diberikan notasi flat
-    "chord-flat", // Tanya notasi flat diberikan chord
-  ];
-
+  const allowedDegrees = diff.degrees;
   let degree, questionType, question, answer, questionKey;
   let attempts = 0;
 
   // Cari kombinasi soal yang belum dipakai (anti-duplikasi).
   do {
-    // Hindari degree yang sama dua kali berturut-turut.
+    // Pilih degree dari daftar yang diizinkan level ini; hindari sama berturut.
     do {
-      degree = Math.floor(Math.random() * 7);
-    } while (degree === state.lastDegree && attempts < 5);
+      degree = allowedDegrees[Math.floor(Math.random() * allowedDegrees.length)];
+    } while (degree === state.lastDegree && allowedDegrees.length > 1 && attempts < 5);
 
     // Hindari tipe soal yang sama dua kali berturut-turut.
     do {
       questionType = questionTypes[Math.floor(Math.random() * questionTypes.length)];
-    } while (questionType === state.lastQuestionType && attempts < 5);
+    } while (questionType === state.lastQuestionType && questionTypes.length > 1 && attempts < 5);
 
     // Susun teks soal & jawaban sesuai tipe.
     if (questionType === "chord-roman") {
@@ -148,26 +210,29 @@ function buildSingleQuestion(root, scale, chords, numerals, state) {
   state.lastDegree = degree;
   state.lastQuestionType = questionType;
 
-  // Susun opsi pilihan sesuai tipe soal.
+  // Susun kandidat pengecoh sesuai tipe soal.
   let potentialOptions = [];
   if (questionType === "chord-roman" || questionType === "chord-number") {
-    potentialOptions = chords.slice(0, 7); // hanya chord diatonik
+    // Pengecoh berupa chord. Level tersulit memakai seluruh 12 chord agar
+    // lebih membingungkan; selain itu hanya 7 chord diatonik.
+    potentialOptions = diff.hardDistractors ? chords.slice(0, 12) : chords.slice(0, 7);
   } else if (questionType === "roman-chord") {
     potentialOptions = [...numerals];
   } else if (questionType === "number-chord") {
     potentialOptions = ["1", "2", "3", "4", "5", "6", "7"];
   } else if (questionType === "flat-chord") {
-    potentialOptions = chords.slice(7, 12); // hanya chord flat
+    // Pengecoh chord flat; level tersulit boleh menambah chord diatonik.
+    potentialOptions = diff.hardDistractors ? chords.slice(0, 12) : chords.slice(7, 12);
   } else if (questionType === "chord-flat") {
     potentialOptions = [...flatRomanNumerals];
   }
 
-  // Buang jawaban benar dari kandidat agar tidak duplikat.
+  // Buang jawaban benar dari kandidat agar tidak duplikat, lalu acak.
   potentialOptions = potentialOptions.filter((opt) => opt !== answer);
-
-  // Ambil 2 pengecoh acak, lalu gabung & acak posisi.
   shuffle(potentialOptions);
-  let options = [answer].concat(potentialOptions.slice(0, 2));
+
+  // Gabung jawaban + pengecoh (dibatasi kandidat yang tersedia), lalu acak posisi.
+  let options = [answer].concat(potentialOptions.slice(0, numDistractors));
   shuffle(options);
 
   return { question, options, answer };
@@ -175,11 +240,19 @@ function buildSingleQuestion(root, scale, chords, numerals, state) {
 
 /**
  * Hasilkan sekumpulan soal (`count` buah) untuk satu sesi quiz.
- * Mempertahankan logika anti-pengulangan antar soal seperti versi asli.
+ * @param {string} root
+ * @param {string} scale "major" | "minor"
+ * @param {object} opts { notation, difficulty, count }
  * @returns {Array<{question:string, options:string[], answer:string}>}
  */
-function generateQuestions(root, scale, count) {
-  const chords = getChordArray(root, scale);
+function generateQuestions(root, scale, opts = {}) {
+  scale = normalizeScale(scale);
+  const notation = normalizeNotation(opts.notation);
+  const difficulty = normalizeDifficulty(opts.difficulty);
+  const count = opts.count;
+  const diff = DIFFICULTIES[difficulty];
+
+  const chords = getChordArray(root, scale, notation);
   const numerals = getNumerals(scale);
 
   const state = {
@@ -190,14 +263,47 @@ function generateQuestions(root, scale, count) {
 
   const questions = [];
   for (let i = 0; i < count; i++) {
-    questions.push(buildSingleQuestion(root, scale, chords, numerals, state));
+    questions.push(buildSingleQuestion(root, scale, chords, numerals, state, diff));
   }
   return questions;
+}
+
+/** Poin per jawaban benar untuk sebuah level (server-authoritative). */
+function getDifficultyPoints(difficulty) {
+  return DIFFICULTIES[normalizeDifficulty(difficulty)].points;
+}
+
+/**
+ * Hitung total poin dari urutan hasil jawaban (server-authoritative).
+ * @param {boolean[]} results urutan benar/salah per soal (true = benar).
+ * @param {string} difficulty level.
+ * @returns {number} total poin termasuk bonus streak (poin dobel saat
+ *                   streak benar beruntun > STREAK_BONUS_THRESHOLD).
+ */
+function computeStreakPoints(results, difficulty) {
+  const weight = getDifficultyPoints(difficulty);
+  let points = 0;
+  let streak = 0;
+  for (const ok of results) {
+    if (ok) {
+      streak += 1;
+      points += weight; // poin dasar
+      if (streak > STREAK_BONUS_THRESHOLD) points += weight; // bonus dobel
+    } else {
+      streak = 0;
+    }
+  }
+  return points;
 }
 
 module.exports = {
   json,
   getChordFamily,
   generateQuestions,
+  getDifficultyPoints,
+  computeStreakPoints,
+  normalizeDifficulty,
+  streakBonusThreshold: STREAK_BONUS_THRESHOLD,
   rootOrder: chordData.rootOrder,
+  difficulties: Object.keys(DIFFICULTIES),
 };

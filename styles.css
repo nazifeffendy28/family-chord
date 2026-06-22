@@ -120,6 +120,17 @@ select:focus {
   margin: 18px 0;
 }
 
+.level-hint {
+  margin: 4px 0 16px;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  background: var(--card-2);
+  border-left: 3px solid var(--primary);
+  border-radius: 8px;
+  text-align: left;
+}
+
 /* ---------- Buttons ---------- */
 .btn {
   display: inline-block;
@@ -204,6 +215,38 @@ select:focus {
   color: var(--text);
   margin-top: 2px;
 }
+/* Streak panas (> 5) -> poin dobel */
+.stat.hot {
+  border-color: var(--gold);
+  color: var(--gold);
+  box-shadow: 0 0 12px rgba(255, 209, 102, 0.4);
+}
+.stat.hot strong {
+  color: var(--gold);
+}
+
+/* ---------- Timer (level Faqih) ---------- */
+.timer {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin: 0 0 16px;
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  color: var(--accent);
+}
+.timer.urgent {
+  color: var(--danger);
+  border-color: var(--danger);
+  animation: pulse 0.6s ease-in-out infinite alternate;
+}
+@keyframes pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.06); }
+}
 
 /* ---------- Question & options ---------- */
 .question-text {
@@ -227,17 +270,33 @@ select:focus {
   cursor: pointer;
   transition: transform 0.08s, background 0.2s, border-color 0.2s;
 }
-.option:hover {
+.option:not(:disabled):hover {
   background: #2a3650;
   border-color: var(--primary);
 }
-.option:active {
+.option:not(:disabled):active {
   transform: translateY(1px);
 }
 .option.selected {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   border-color: var(--primary);
   color: #fff;
+}
+/* Umpan balik langsung setelah memilih jawaban */
+.option:disabled {
+  cursor: default;
+}
+.option.correct {
+  background: linear-gradient(135deg, var(--accent), #15b88c);
+  border-color: var(--accent);
+  color: #04231b;
+  font-weight: 600;
+}
+.option.wrong {
+  background: linear-gradient(135deg, var(--danger), #d6385a);
+  border-color: var(--danger);
+  color: #fff;
+  font-weight: 600;
 }
 
 .quiz-actions {
@@ -271,6 +330,30 @@ select:focus {
 }
 .score-box strong {
   font-size: 1.4rem;
+}
+.score-box.highlight {
+  background: linear-gradient(135deg, rgba(108, 140, 255, 0.25), rgba(34, 211, 166, 0.2));
+  border-color: var(--primary);
+}
+.level-tag {
+  text-align: center;
+  margin-top: -6px;
+}
+.level-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 999px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.leaderboard-table .pts {
+  font-weight: 700;
+  color: var(--gold);
+  white-space: nowrap;
 }
 
 /* ---------- Tables ---------- */
